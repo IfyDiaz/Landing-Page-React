@@ -1,0 +1,28 @@
+name: Deploy to S3
+
+on:
+  push:
+    branches:
+      - master # Adjust the branch name as needed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build and package
+        run: |
+          npm run build
+          # Package your static files into a directory (e.g., "dist")
+
+      - name: Deploy to S3
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --acl public-read --follow-symlinks --delete
+        env:
+          AWS_S3_BUCKET: zeeotherbucket
+          AWS_ACCESS_KEY_ID: ${{ AKIA22CHUNEKSQCC6V7Z }}
+          AWS_SECRET_ACCESS_KEY: ${{ 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 }}
