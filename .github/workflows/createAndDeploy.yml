@@ -1,0 +1,42 @@
+name: Create and Deploy to S3
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+
+    env:
+      CI: false
+      AWS_S3_BUCKET: zeeotherbucket1
+      AWS_REGION: eu-north-1
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm ci
+    - run: npm run build --if-present
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+    - name: Create S3 Bucket
+      run: |
+        aws s3api create-bucket --bucket $AWS_S3_BUCKET --region $AWS_REGION
+        aws s3 website s3://$AWS_S3_BUCKET/ --index-document index.html --error-document error.html
+    - name: Deploy to S3
+      run: |
+        aws s3 sync build/ s3://$AWS_S3_BUCKET/ --delete
